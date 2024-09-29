@@ -43,7 +43,7 @@ jobs:
           
       - name: Build and Push Docker Compose images
         run: |
-          docker build
+          docker build -t fiap-sa-api:latest
           aws ecr describe-repositories --repository-names fiap-sa-api || aws ecr create-repository --repository-name fiap-sa-api
           docker tag fiap-sa-api 891377307312.dkr.ecr.$AWS_REGION.amazonaws.com/fiap-sa-api:latest
           docker push 891377307312.dkr.ecr.$AWS_REGION.amazonaws.com/fiap-sa-api:latest
