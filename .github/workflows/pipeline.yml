@@ -43,7 +43,8 @@ jobs:
           
       - name: Build and Push Docker Compose images
         run: |
-          docker build . --file Dockerfile --tag fiap-sa-api:latest
+          aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin 891377307312.dkr.ecr.us-east-1.amazonaws.com
+          docker build -t fiap-sa-api .
           docker tag fiap-sa-api 891377307312.dkr.ecr.$AWS_REGION.amazonaws.com/fiap-sa-api:latest
           docker push 891377307312.dkr.ecr.$AWS_REGION.amazonaws.com/fiap-sa-api:latest
 
