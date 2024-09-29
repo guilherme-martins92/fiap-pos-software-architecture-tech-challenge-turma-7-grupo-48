@@ -50,11 +50,11 @@ jobs:
 
       - name: Deploy to Kubernetes
         run: |
+          kubectl apply -f k8s/services/mssql-fiap-sa.yaml
+          kubectl apply -f k8s/services/mssql-service-fiap-sa.yaml
           kubectl apply -f k8s/services/mssql-fiap-sa-pv.yaml
           kubectl apply -f k8s/services/mssql-fiap-sa-pvc.yaml
           kubectl apply -f k8s/services/mssql-secret-fiap-sa.yaml
-          kubectl apply -f k8s/services/mssql-fiap-sa.yaml
-          kubectl apply -f k8s/services/mssql-service-fiap-sa.yaml
           kubectl apply -f k8s/application/configmap-fiap-sa.yaml
           kubectl apply -f k8s/application/secret-fiap-sa.yaml
           kubectl apply -f k8s/application/deployment-fiap-sa.yaml
