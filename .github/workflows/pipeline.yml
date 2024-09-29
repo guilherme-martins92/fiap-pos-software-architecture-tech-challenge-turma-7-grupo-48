@@ -52,8 +52,18 @@ jobs:
         run: |
          aws eks update-kubeconfig --region us-east-1 --name fiap-api-cluster
 
+      - name: Create Namespace
+        run: |
+          kubectl create namespace fiap-sa-api || echo "Namespace already exists"
+          kubectl create namespace mssql-fiap-sa || echo "Namespace already exists"
+
       - name: Deploy to Kubernetes
         run: |
+          kubectl apply -f k8s/services/mssql-fiap-sa-pv.yaml
+          kubectl apply -f k8s/services/mssql-fiap-sa-pvc.yaml
+          kubectl apply -f k8s/services/mssql-secret-fiap-sa.yaml
+          kubectl apply -f k8s/services/mssql-fiap-sa.yaml
+          kubectl apply -f k8s/services/mssql-service-fiap-sa.yaml
           kubectl apply -f k8s/application/configmap-fiap-sa.yaml
           kubectl apply -f k8s/application/secret-fiap-sa.yaml
           kubectl apply -f k8s/application/deployment-fiap-sa.yaml
