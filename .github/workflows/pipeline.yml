@@ -41,14 +41,9 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
           
-      - name: Install Docker Compose
-        run: |
-          sudo apt-get update
-          sudo apt-get install docker-compose -y
-          
       - name: Build and Push Docker Compose images
         run: |
-          docker-compose build
+          docker build
           aws ecr describe-repositories --repository-names fiap-sa-api || aws ecr create-repository --repository-name fiap-sa-api
           docker tag fiap-sa-api 891377307312.dkr.ecr.$AWS_REGION.amazonaws.com/fiap-sa-api:latest
           docker push 891377307312.dkr.ecr.$AWS_REGION.amazonaws.com/fiap-sa-api:latest
