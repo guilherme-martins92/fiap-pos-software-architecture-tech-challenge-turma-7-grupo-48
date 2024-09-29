@@ -1,5 +1,6 @@
 name: Build and Deploy .NET 8 Application
 
+# Evento que aciona o pipeline: sempre que houver um push na branch 'main'
 on:
   push:
     branches:
@@ -8,65 +9,85 @@ on:
 jobs:
   # Job 1: Build
   build:
+    # Define que o job será executado em uma máquina virtual Ubuntu
     runs-on: ubuntu-latest
 
     steps:
+      # Passo 1: Fazer o checkout do código do repositório
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # Passo 2: Configurar o ambiente com a versão correta do .NET
       - name: Set up .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.x'
+          dotnet-version: '8.x'  # Especifica que a versão do .NET a ser usada é a 8.x
 
+      # Passo 3: Restaurar as dependências do projeto .NET (gerencia pacotes NuGet)
       - name: Restore dependencies
         run: dotnet restore src/WebApi/WebApi.csproj
 
+      # Passo 4: Compilar o projeto .NET
       - name: Build
         run: dotnet build src/WebApi/WebApi.csproj
 
   # Job 2: Deploy
   deploy:
+    # O job de deploy também será executado em uma máquina virtual Ubuntu
     runs-on: ubuntu-latest
+    # Este job só começa após o job de build ser concluído
     needs: build
     
     steps:
+      # Passo 1: Fazer o checkout do código (necessário novamente para garantir que o código esteja disponível)
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # Passo 2: Configurar o AWS CLI com as credenciais da AWS para autenticação
       - name: Set up AWS CLI
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}  # Chave de acesso da AWS, armazenada como segredo
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}  # Chave secreta da AWS
+          aws-region: ${{ secrets.AWS_REGION }}  # Região da AWS onde os serviços serão executados
           
+      # Passo 3: Fazer o build da imagem Docker e enviá-la para o Amazon ECR (Elastic Container Registry)
       - name: Build and Push Docker Compose images
         run: |
-          aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
+          # Login no ECR usando as credenciais da AWS
+          aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com
+          # Build da imagem Docker
           docker build -t fiap-sa-api .
+          # Tag da imagem com o identificador do repositório ECR
           docker tag fiap-sa-api ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com/fiap-sa-api:latest
+          # Push da imagem Docker para o repositório ECR
           docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com/fiap-sa-api:latest
           
+      # Passo 4: Atualizar o arquivo de configuração do kubeconfig para conectar ao cluster EKS
       - name: Update Kube Config File
         run: |
-         aws eks update-kubeconfig --region us-east-1 --name fiap-api-cluster
+          aws eks update-kubeconfig --region us-east-1 --name fiap-api-cluster  # Conectar ao cluster EKS especificado
 
+      # Passo 5: Criar namespaces no Kubernetes (se não existirem)
       - name: Create Namespace
         run: |
+          # Cria o namespace 'fiap-sa-api' se ele não existir
           kubectl create namespace fiap-sa-api || echo "Namespace already exists"
+          # Cria o namespace 'mssql-fiap-sa' se ele não existir
           kubectl create namespace mssql-fiap-sa || echo "Namespace already exists"
 
+      # Passo 6: Aplicar as configurações e fazer o deploy dos serviços e da aplicação no Kubernetes
       - name: Deploy to Kubernetes
         run: |
-          kubectl apply -f k8s/services/mssql-fiap-sa-pv.yaml
-          kubectl apply -f k8s/services/mssql-fiap-sa-pvc.yaml
-          kubectl apply -f k8s/services/mssql-secret-fiap-sa.yaml
-          kubectl apply -f k8s/services/mssql-fiap-sa.yaml
-          kubectl apply -f k8s/services/mssql-service-fiap-sa.yaml
-          kubectl apply -f k8s/application/configmap-fiap-sa.yaml
-          kubectl apply -f k8s/application/secret-fiap-sa.yaml
-          kubectl apply -f k8s/application/deployment-fiap-sa.yaml
-          kubectl apply -f k8s/application/service-fiap-sa.yaml
-          kubectl apply -f k8s/application/deployment-fiap-sa.yaml
-          kubectl apply -f k8s/application/service-fiap-sa.yaml
+          # Aplicar configurações para o banco de dados SQL Server no Kubernetes
+          kubectl apply -f k8s/services/mssql-fiap-sa-pv.yaml  # Configuração de volume persistente
+          kubectl apply -f k8s/services/mssql-fiap-sa-pvc.yaml  # Configuração de claim de volume persistente
+          kubectl apply -f k8s/services/mssql-secret-fiap-sa.yaml  # Segredos (credenciais) do SQL Server
+          kubectl apply -f k8s/services/mssql-fiap-sa.yaml  # Configuração do SQL Server
+          kubectl apply -f k8s/services/mssql-service-fiap-sa.yaml  # Serviço para expor o SQL Server no Kubernetes
+
+          # Aplicar configurações para a aplicação .NET no Kubernetes
+          kubectl apply -f k8s/application/configmap-fiap-sa.yaml  # Configurações da aplicação .NET (ConfigMap)
+          kubectl apply -f k8s/application/secret-fiap-sa.yaml  # Segredos da aplicação .NET
+          kubectl apply -f k8s/application/deployment-fiap-sa.yaml  # Configuração do deployment da aplicação .NET
+          kubectl apply -f k8s/application/service-fiap-sa.yaml  # Configuração do serviço da aplicação .NET para exposição externa
