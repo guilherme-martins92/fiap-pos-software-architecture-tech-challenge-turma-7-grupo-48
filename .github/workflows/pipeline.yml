@@ -43,10 +43,10 @@ jobs:
           
       - name: Build and Push Docker Compose images
         run: |
-          aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com
+          aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
           docker build -t fiap-sa-api .
-          docker tag fiap-sa-api $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/fiap-sa-api:latest
-          docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/fiap-sa-api:latest
+          docker tag fiap-sa-api ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com/fiap-sa-api:latest
+          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com/fiap-sa-api:latest
 
       - name: Deploy to Kubernetes
         run: |
