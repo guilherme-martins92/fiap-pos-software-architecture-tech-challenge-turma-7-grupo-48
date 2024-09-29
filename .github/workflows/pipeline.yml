@@ -43,21 +43,21 @@ jobs:
           
       - name: Build and Push Docker Compose images
         run: |
-          aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin 891377307312.dkr.ecr.us-east-1.amazonaws.com
+          aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com
           docker build -t fiap-sa-api .
-          docker tag fiap-sa-api 891377307312.dkr.ecr.$AWS_REGION.amazonaws.com/fiap-sa-api:latest
-          docker push 891377307312.dkr.ecr.$AWS_REGION.amazonaws.com/fiap-sa-api:latest
+          docker tag fiap-sa-api $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/fiap-sa-api:latest
+          docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/fiap-sa-api:latest
 
       - name: Deploy to Kubernetes
         run: |
-          kubectl apply -f k8s/services/mssql-fiap-sa-pv.yaml --validate=false
-          kubectl apply -f k8s/services/mssql-fiap-sa-pvc.yaml --validate=false
-          kubectl apply -f k8s/services/mssql-secret-fiap-sa.yaml --validate=false
-          kubectl apply -f k8s/services/mssql-fiap-sa.yaml --validate=false
-          kubectl apply -f k8s/services/mssql-service-fiap-sa.yaml --validate=false
-          kubectl apply -f k8s/application/configmap-fiap-sa.yaml --validate=false
-          kubectl apply -f k8s/application/secret-fiap-sa.yaml --validate=false
-          kubectl apply -f k8s/application/deployment-fiap-sa.yaml --validate=false
-          kubectl apply -f k8s/application/service-fiap-sa.yaml --validate=false
-          kubectl apply -f k8s/application/deployment-fiap-sa.yaml --validate=false
-          kubectl apply -f k8s/application/service-fiap-sa.yaml --validate=false
+          kubectl apply -f k8s/services/mssql-fiap-sa-pv.yaml
+          kubectl apply -f k8s/services/mssql-fiap-sa-pvc.yaml
+          kubectl apply -f k8s/services/mssql-secret-fiap-sa.yaml
+          kubectl apply -f k8s/services/mssql-fiap-sa.yaml
+          kubectl apply -f k8s/services/mssql-service-fiap-sa.yaml
+          kubectl apply -f k8s/application/configmap-fiap-sa.yaml
+          kubectl apply -f k8s/application/secret-fiap-sa.yaml
+          kubectl apply -f k8s/application/deployment-fiap-sa.yaml
+          kubectl apply -f k8s/application/service-fiap-sa.yaml
+          kubectl apply -f k8s/application/deployment-fiap-sa.yaml
+          kubectl apply -f k8s/application/service-fiap-sa.yaml
