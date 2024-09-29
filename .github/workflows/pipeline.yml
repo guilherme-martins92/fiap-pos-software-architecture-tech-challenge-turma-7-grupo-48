@@ -39,7 +39,14 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Build and Push Docker Compose images
+        run: |
+          docker-compose build
+          aws ecr describe-repositories --repository-names fiap-sa-api || aws ecr create-repository --repository-name fiap-sa-api
+          docker tag fiap-sa-api 891377307312.dkr.ecr.$AWS_REGION.amazonaws.com/fiap-sa-api:latest
+          docker push 891377307312.dkr.ecr.$AWS_REGION.amazonaws.com/fiap-sa-api:latest
 
       - name: Deploy to Kubernetes
         run: |
