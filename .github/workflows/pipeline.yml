@@ -40,13 +40,6 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
-
-      - name: Set up Kubeconfig
-        env:
-          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA }}
-        run: |
-          echo "${KUBE_CONFIG_DATA}" > ~/.kube/config
-          chmod 600 ~/.kube/config
           
       - name: Build and Push Docker Compose images
         run: |
@@ -54,6 +47,10 @@ jobs:
           docker build -t fiap-sa-api .
           docker tag fiap-sa-api ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com/fiap-sa-api:latest
           docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com/fiap-sa-api:latest
+          
+      - name: Update Kube Config File
+        run: |
+         aws eks update-kubeconfig --region us-east-1 --name fiap-api-cluster
 
       - name: Deploy to Kubernetes
         run: |
