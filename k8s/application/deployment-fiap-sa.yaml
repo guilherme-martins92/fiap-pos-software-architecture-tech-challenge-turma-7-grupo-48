@@ -31,7 +31,7 @@ spec:
                 - fiap-sa
             topologyKey: kubernetes.io/hostname
       containers:
-      - image: 533267350475.dkr.ecr.sa-east-1.amazonaws.com/fiap-sa-api:latest
+      - image: 891377307312.dkr.ecr.us-east-1.amazonaws.com/fiap-sa-api:latest
         name: fiap-sa
         imagePullPolicy: Always
         resources:
