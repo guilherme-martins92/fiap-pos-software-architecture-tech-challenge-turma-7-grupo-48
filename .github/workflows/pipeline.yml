@@ -79,13 +79,6 @@ jobs:
       # Passo 6: Aplicar as configurações e fazer o deploy dos serviços e da aplicação no Kubernetes
       - name: Deploy to Kubernetes
         run: |
-          # Aplicar configurações para o banco de dados SQL Server no Kubernetes
-          kubectl apply -f k8s/services/mssql-fiap-sa-pv.yaml  # Configuração de volume persistente
-          kubectl apply -f k8s/services/mssql-fiap-sa-pvc.yaml  # Configuração de claim de volume persistente
-          kubectl apply -f k8s/services/mssql-secret-fiap-sa.yaml  # Segredos (credenciais) do SQL Server
-          kubectl apply -f k8s/services/mssql-fiap-sa.yaml  # Configuração do SQL Server
-          kubectl apply -f k8s/services/mssql-service-fiap-sa.yaml  # Serviço para expor o SQL Server no Kubernetes
-
           # Aplicar configurações para a aplicação .NET no Kubernetes
           kubectl apply -f k8s/application/configmap-fiap-sa.yaml  # Configurações da aplicação .NET (ConfigMap)
           kubectl apply -f k8s/application/secret-fiap-sa.yaml  # Segredos da aplicação .NET
